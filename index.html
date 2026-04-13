@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOSO TRAVELS | AI Destination Discovery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap');
+        
+        :root {
+            --primary: #0ea5e9;
+            --secondary: #0f172a;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            scroll-behavior: smooth;
+            background-color: #f8fafc;
+        }
+
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .glass-nav {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .hero-gradient {
+            background: radial-gradient(circle at top right, #e0f2fe, transparent),
+                        radial-gradient(circle at bottom left, #f0f9ff, transparent);
+        }
+
+        .search-container {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-container:focus-within {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .place-card {
+            transition: all 0.3s ease;
+        }
+
+        .place-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        #lightbox-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="text-slate-900 overflow-x-hidden">
+
+    <!-- Lightbox -->
+    <div id="lightbox-modal" onclick="closeLightbox()">
+        <button class="absolute top-6 right-8 text-white text-4xl hover:text-sky-400 transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="max-w-5xl w-full p-4 flex flex-col items-center">
+            <img id="lightbox-img" src="" class="max-h-[75vh] rounded-2xl shadow-2xl object-contain border border-white/10" alt="Enlarged">
+            <div id="lightbox-content" class="mt-6 text-center text-white">
+                <h3 id="lightbox-title" class="text-3xl font-bold mb-2"></h3>
+                <p id="lightbox-desc" class="text-slate-300 max-w-2xl"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="fixed top-0 w-full z-50 glass-nav border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-extrabold tracking-tighter text-sky-600 flex items-center">
+                <i class="fa-solid fa-earth-americas mr-2 text-sky-500"></i>MOSO TRAVELS
+            </div>
+            <div class="hidden md:flex space-x-8 text-sm font-semibold text-slate-600 uppercase tracking-widest">
+                <a href="#" class="hover:text-sky-600 transition-colors">Home</a>
+                <a href="#results" class="hover:text-sky-600 transition-colors">Destinations</a>
+                <a href="#" class="hover:text-sky-600 transition-colors">About</a>
+            </div>
+            <button class="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-sky-600 transition-all">
+                Sign In
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero-gradient pt-40 pb-20 px-6 min-h-[70vh] flex flex-col items-center justify-center text-center">
+        <span class="bg-sky-100 text-sky-700 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 animate-bounce">
+            AI-Powered Discovery
+        </span>
+        <h1 class="text-5xl md:text-8xl font-black text-slate-900 mb-8 max-w-5xl tracking-tight leading-none">
+            Where do you <span class="text-sky-600">want to go</span> next?
+        </h1>
+        <p class="text-lg md:text-xl text-slate-500 mb-12 max-w-2xl">
+            Type any city, country, or hidden gem. Our AI will curate the perfect list of places to explore.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="w-full max-w-2xl search-container relative group">
+            <div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 group-focus-within:text-sky-500 transition-colors"></i>
+            </div>
+            <input 
+                type="text" 
+                id="destination-input"
+                placeholder="Ex: Paris, Kyoto, Iceland..."
+                class="w-full pl-14 pr-40 py-6 rounded-2xl border-2 border-slate-200 bg-white text-lg focus:outline-none focus:border-sky-500 shadow-xl transition-all"
+            >
+            <button 
+                onclick="searchDestination()"
+                class="absolute right-3 top-3 bottom-3 px-8 bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700 transition-all active:scale-95 shadow-lg shadow-sky-200"
+            >
+                Search
+            </button>
+        </div>
+        
+        <div class="mt-8 flex flex-wrap justify-center gap-3 text-sm font-semibold text-slate-400">
+            <span>Trending:</span>
+            <button onclick="setInput('Dubai')" class="hover:text-sky-600">Dubai</button>
+            <button onclick="setInput('Bali')" class="hover:text-sky-600">Bali</button>
+            <button onclick="setInput('New York')" class="hover:text-sky-600">New York</button>
+            <button onclick="setInput('Prague')" class="hover:text-sky-600">Prague</button>
+        </div>
+    </header>
+
+    <!-- Results Section -->
+    <section id="results" class="max-w-7xl mx-auto px-6 py-20 min-h-screen">
+        <div id="results-header" class="hidden mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+                <h2 id="result-title" class="text-4xl md:text-5xl font-black text-slate-900">Explore New Delhi</h2>
+                <p id="result-subtitle" class="text-slate-500 mt-2">Discovering the best of this destination</p>
+            </div>
+            <div class="flex items-center space-x-2 text-sm font-bold text-sky-600 bg-sky-50 px-4 py-2 rounded-lg">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>AI SUGGESTIONS</span>
+            </div>
+        </div>
+
+        <!-- Initial Placeholder -->
+        <div id="initial-placeholder" class="text-center py-20">
+            <div class="text-6xl text-slate-200 mb-6">
+                <i class="fa-solid fa-map-location-dot"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-400">Your search results will appear here</h3>
+        </div>
+
+        <!-- Loading Skeleton -->
+        <div id="loading-state" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="space-y-4">
+                <div class="h-64 rounded-2xl loading-shimmer"></div>
+                <div class="h-6 w-3/4 rounded loading-shimmer"></div>
+                <div class="h-4 w-full rounded loading-shimmer"></div>
+                <div class="h-4 w-5/6 rounded loading-shimmer"></div>
+            </div>
+            <div class="space-y-4">
+                <div class="h-64 rounded-2xl loading-shimmer"></div>
+                <div class="h-6 w-3/4 rounded loading-shimmer"></div>
+                <div class="h-4 w-full rounded loading-shimmer"></div>
+                <div class="h-4 w-5/6 rounded loading-shimmer"></div>
+            </div>
+            <div class="space-y-4">
+                <div class="h-64 rounded-2xl loading-shimmer"></div>
+                <div class="h-6 w-3/4 rounded loading-shimmer"></div>
+                <div class="h-4 w-full rounded loading-shimmer"></div>
+                <div class="h-4 w-5/6 rounded loading-shimmer"></div>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="hidden text-center py-20 text-red-500">
+            <i class="fa-solid fa-circle-exclamation text-4xl mb-4"></i>
+            <h3 class="text-xl font-bold" id="error-message">Unable to fetch places. Please try again.</h3>
+        </div>
+
+        <!-- Dynamic Content Grid -->
+        <div id="places-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-20 px-6 mt-20">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
+            <div class="col-span-2">
+                <div class="text-3xl font-black text-sky-400 mb-6">MOSO TRAVELS</div>
+                <p class="text-slate-400 max-w-sm leading-relaxed mb-8">
+                    Your personal travel companion powered by artificial intelligence. Explore every corner of the world with ease and inspiration.
+                </p>
+                <div class="flex space-x-6 text-xl text-slate-400">
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold mb-6 text-sky-500">Quick Links</h4>
+                <ul class="space-y-4 text-slate-400">
+                    <li><a href="#" class="hover:text-white transition-colors">Home</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Popular Destinatios</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Travel Guides</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-6 text-sky-500">Subscribe</h4>
+                <div class="flex">
+                    <input type="email" placeholder="Email" class="bg-slate-800 border-none px-4 py-2 rounded-l-lg w-full focus:ring-1 focus:ring-sky-500">
+                    <button class="bg-sky-600 px-4 py-2 rounded-r-lg font-bold">Go</button>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto pt-12 mt-12 border-t border-slate-800 text-center text-slate-500 text-sm font-semibold tracking-widest">
+            © 2024 MOSO TRAVELS. REDEFINING DISCOVERY.
+        </div>
+    </footer>
+
+    <script>
+        const apiKey = ""; // Runtime provides the key
+
+        function setInput(val) {
+            const input = document.getElementById('destination-input');
+            input.value = val;
+            searchDestination();
+        }
+
+        async function searchDestination() {
+            const dest = document.getElementById('destination-input').value.trim();
+            if (!dest) return;
+
+            // Reset UI states
+            document.getElementById('initial-placeholder').classList.add('hidden');
+            document.getElementById('error-state').classList.add('hidden');
+            document.getElementById('results-header').classList.add('hidden');
+            document.getElementById('places-grid').innerHTML = '';
+            document.getElementById('loading-state').classList.remove('hidden');
+
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+            const systemPrompt = "You are a professional travel guide API. Provide the most iconic and interesting tourist places for the user's destination. Return ONLY a JSON object with a list of 'places'. Each place must have: 'name', 'description', 'category', and 'imgKeyword' (a specific phrase for finding a relevant high-quality photo).";
+            const userQuery = `Suggest 6 must-visit tourist places for: ${dest}. Return JSON format.`;
+
+            try {
+                const response = await fetchWithRetry(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: userQuery }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] },
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    }
+                );
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!text) throw new Error("No data received");
+                
+                const data = JSON.parse(text);
+                renderResults(dest, data.places);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('error-state').classList.remove('hidden');
+                document.getElementById('error-message').innerText = "Oops! We couldn't fly to that destination right now. Please try again.";
+            }
+        }
+
+        async function fetchWithRetry(url, options, retries = 5, backoff = 1000) {
+            try {
+                const res = await fetch(url, options);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res;
+            } catch (err) {
+                if (retries > 0) {
+                    await new Promise(r => setTimeout(r, backoff));
+                    return fetchWithRetry(url, options, retries - 1, backoff * 2);
+                }
+                throw err;
+            }
+        }
+
+        function renderResults(dest, places) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('results-header').classList.remove('hidden');
+            document.getElementById('result-title').innerText = `Explore ${dest}`;
+            
+            const grid = document.getElementById('places-grid');
+            
+            places.forEach(place => {
+                const imgUrl = `https://images.unsplash.com/photo-1524492707947-2f85a64b67ad?auto=format&fit=crop&q=80&w=800`; // Placeholder fallback
+                const dynamicImg = `https://source.unsplash.com/featured/800x600?${encodeURIComponent(place.imgKeyword || place.name)}`;
+                
+                const card = document.createElement('div');
+                card.className = 'place-card bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group cursor-pointer';
+                card.onclick = () => openLightbox(dynamicImg, place.name, place.description);
+                
+                card.innerHTML = `
+                    <div class="h-64 overflow-hidden relative">
+                        <img 
+                            src="${dynamicImg}" 
+                            onerror="this.src='https://images.unsplash.com/photo-1524492707947-2f85a64b67ad?auto=format&fit=crop&q=80&w=800'"
+                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            alt="${place.name}"
+                        >
+                        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-sky-600">
+                            ${place.category || 'Discovery'}
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-sky-600 transition-colors">${place.name}</h4>
+                        <p class="text-slate-500 text-sm line-clamp-3 leading-relaxed">
+                            ${place.description}
+                        </p>
+                        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400">READ MORE</span>
+                            <i class="fa-solid fa-arrow-right text-sky-500 transform transition-transform group-hover:translate-x-1"></i>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Lightbox
+        function openLightbox(src, title, desc) {
+            const modal = document.getElementById('lightbox-modal');
+            const img = document.getElementById('lightbox-img');
+            img.src = src;
+            document.getElementById('lightbox-title').innerText = title;
+            document.getElementById('lightbox-desc').innerText = desc;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Listen for Enter key
+        document.getElementById('destination-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchDestination();
+        });
+    </script>
+</body>
+</html>
