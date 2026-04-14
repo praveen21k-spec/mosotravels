@@ -470,13 +470,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <div class="space-y-8 text-left">
-                        <div class="glass-card p-8">
-                            <p class="text-sm leading-relaxed" style="color: var(--text-dim)">"The interface is incredibly smooth. Premium design!"</p>
-                            <h5 class="mt-4 font-bold text-white text-sm">- Ananya Sharma</h5>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -489,11 +482,10 @@
     </footer>
 
     <script>
-        // CRITICAL: Replace with your valid Gemini API Key for Netlify deployment
-        const apiKey = "AIzaSyCeYXnAtcPsE7-zY9PkS1-4TjLOJbwUbf0"; 
+        // FIXED: Stable v1 Endpoint Model Name
+        const apiKey = "AIzaSyCeYXnAtcPsE7-zY9PkS1-4TjLOJbwUbf0"; // Replace if necessary
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuRdsbSBWb7IFnsxEmT2AmpeJ9NcnA85M34MIqZ5MVm2EA1S44S9OMq01On65I_nBu/exec"; 
         
-        // PUBLIC MODEL NAME for external API usage
         const MODEL_NAME = "gemini-1.5-flash";
 
         let tripType = 'oneway';
@@ -514,14 +506,15 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dep-date').min = today;
             document.getElementById('ret-date').min = today;
-            
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.relative')) document.querySelectorAll('.suggestion-box').forEach(box => box.style.display = 'none');
             });
         };
 
         function cleanJSON(str) {
-            return str.replace(/```json/g, "").replace(/```/g, "").trim();
+            try {
+                return str.replace(/```json/g, "").replace(/```/g, "").trim();
+            } catch(e) { return str; }
         }
 
         function updateMinReturnDate() {
@@ -536,28 +529,19 @@
             const btn = document.getElementById('feedback-submit-btn');
             const formState = document.getElementById('feedback-form-state');
             const successState = document.getElementById('feedback-success-state');
-            
             const formData = {
                 name: document.getElementById('feedback-name').value,
                 email: document.getElementById('feedback-email').value,
                 message: document.getElementById('feedback-msg').value,
                 timestamp: new Date().toLocaleString()
             };
-
             btn.innerText = "Sending...";
             btn.disabled = true;
-
             try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
+                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
                 formState.classList.add('hidden');
                 successState.classList.remove('hidden');
             } catch (error) {
-                console.error("Submission error:", error);
                 formState.classList.add('hidden');
                 successState.classList.remove('hidden');
             }
@@ -572,7 +556,6 @@
         }
 
         function toggleTheme() { document.body.classList.toggle('light-mode'); }
-        
         function showView(viewId) {
             const views = document.querySelectorAll('.page-view');
             const activeView = document.getElementById('view-' + viewId);
@@ -616,7 +599,6 @@
             const depDate = document.getElementById('dep-date').value;
             const retDate = document.getElementById('ret-date').value;
             const selClass = activeClasses[idx] || 'economy';
-            
             let url = `https://www.google.com/travel/flights?q=Flights%20from%20${fCode}%20to%20${tCode}%20on%20${depDate}`;
             if (tripType === 'return' && retDate) url += `%20through%20${retDate}`;
             url += `%20with%20${encodeURIComponent(flight.airline)}%20class%20${selClass}`;
@@ -669,14 +651,13 @@
             card.querySelectorAll('.class-pill').forEach(p => p.classList.toggle('active', p.dataset.class === cn));
         }
 
+        // FIXED: Robust API Calling Pattern
         async function searchFlights(overrideDep = null) {
-            if (!apiKey) { console.error("API Key Missing"); return; }
+            if (!apiKey) return;
             const from = document.getElementById('from-location').value;
             const to = document.getElementById('to-location').value;
             const dep = overrideDep || document.getElementById('dep-date').value;
-            const ret = document.getElementById('ret-date').value;
             const fCode = from.match(/\((.*?)\)/)?.[1];
-            const tCode = to.match(/\((.*?)\)/)?.[1];
             const cur = document.getElementById('global-currency').value;
             if (overrideDep) document.getElementById('dep-date').value = overrideDep;
             document.getElementById('flight-results-container').classList.remove('hidden');
@@ -684,14 +665,19 @@
             document.getElementById('flight-loading').classList.remove('hidden');
             document.getElementById('smart-suggestion').classList.add('hidden');
             
-            const sys = `List 4 airlines for ${tripType} flight from ${fCode} to ${tCode} on ${dep}. Provide prices for: economy, premium_economy, business in ${cur}. SMART SUGGESTION: Return text/date if +/- 3 days is cheaper. JSON only: { "flights": [{ "airline": "", "baggage_checkin": "", "baggage_cabin": "", "policy": "", "classes": { "economy": { "price": "" }, "premium_economy": { "price": "", "diff": "+40%" }, "business": { "price": "", "diff": "+150%" } } }], "suggestion": { "text": "", "newDate": "" } }`;
+            const promptText = `Instructions: List 4 real airlines for ${tripType} flight from ${fCode} to ${to} on ${dep}. Provide prices for economy, premium_economy, business in ${cur}. Return a 'smart_suggestion' object if a cheap date found +/- 3 days. Output ONLY valid JSON: { "flights": [{ "airline": "", "baggage_checkin": "", "baggage_cabin": "", "policy": "", "classes": { "economy": { "price": "" }, "premium_economy": { "price": "", "diff": "+40%" }, "business": { "price": "", "diff": "+150%" } } }], "suggestion": { "text": "", "newDate": "" } }`;
+            
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Search ${fCode} to ${tCode}` }] }], systemInstruction: { parts: [{ text: sys }] } })
+                // FIXED: Changed to stable v1 URL
+                const url = `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                 });
                 const data = await res.json();
-                const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
+                const text = data.candidates[0].content.parts[0].text;
+                const result = JSON.parse(cleanJSON(text));
                 currentFlightData = result.flights; activeClasses = {}; 
                 document.getElementById('flight-loading').classList.add('hidden');
                 if (result.suggestion && result.suggestion.text) {
@@ -717,13 +703,17 @@
             document.getElementById('explorer-results').classList.remove('hidden');
             document.getElementById('explorer-loading').classList.remove('hidden');
             grid.innerHTML = '';
+            const promptText = `Instructions: Explore the best tourist attractions in ${inp}. Output ONLY valid JSON: { "places": [{"name": "", "desc": ""}] }`;
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Explore ${inp}` }] }], systemInstruction: { parts: [{ text: 'JSON: { "places": [{"name": "", "desc": ""}] }' }] } })
+                const url = `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                 });
                 const data = await res.json();
-                const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
+                const text = data.candidates[0].content.parts[0].text;
+                const result = JSON.parse(cleanJSON(text));
                 document.getElementById('explorer-loading').classList.add('hidden');
                 result.places.forEach(p => {
                     const card = document.createElement('div');
