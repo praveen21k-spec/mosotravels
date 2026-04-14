@@ -412,7 +412,6 @@
                         </div>
                         <div class="flex flex-col">
                             <label class="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest ml-1">Departure Date</label>
-                            <!-- UPDATED onchange to fix date logic -->
                             <input id="dep-date" type="date" onchange="updateMinReturnDate()" oninput="validateCheckFareButton()" class="px-6 py-5 rounded-2xl search-input outline-none text-sm">
                         </div>
                         <div id="return-date-container" class="flex flex-col opacity-20 pointer-events-none transition-all duration-300">
@@ -490,8 +489,12 @@
     </footer>
 
     <script>
+        // CRITICAL: Replace with your valid Gemini API Key for Netlify deployment
         const apiKey = "AIzaSyCeYXnAtcPsE7-zY9PkS1-4TjLOJbwUbf0"; 
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuRdsbSBWb7IFnsxEmT2AmpeJ9NcnA85M34MIqZ5MVm2EA1S44S9OMq01On65I_nBu/exec"; 
+        
+        // PUBLIC MODEL NAME for external API usage
+        const MODEL_NAME = "gemini-1.5-flash";
 
         let tripType = 'oneway';
         let currentFlightData = [];
@@ -517,19 +520,15 @@
             });
         };
 
-        // Utility to clean AI Response JSON
         function cleanJSON(str) {
             return str.replace(/```json/g, "").replace(/```/g, "").trim();
         }
 
-        // Fix: Update Min Return Date when Departure Changes
         function updateMinReturnDate() {
             const depDate = document.getElementById('dep-date').value;
             const retInput = document.getElementById('ret-date');
             retInput.min = depDate;
-            if (retInput.value && retInput.value < depDate) {
-                retInput.value = depDate;
-            }
+            if (retInput.value && retInput.value < depDate) retInput.value = depDate;
         }
 
         async function submitFeedback(event) {
@@ -612,8 +611,8 @@
             const flight = currentFlightData[idx];
             const fromStr = document.getElementById('from-location').value;
             const toStr = document.getElementById('to-location').value;
-            const fCode = fromStr.match(/\((.*?)\)/)?.[1] || fromStr.slice(-4, -1);
-            const tCode = toStr.match(/\((.*?)\)/)?.[1] || toStr.slice(-4, -1);
+            const fCode = fromStr.match(/\((.*?)\)/)?.[1] || "DEL";
+            const tCode = toStr.match(/\((.*?)\)/)?.[1] || "BOM";
             const depDate = document.getElementById('dep-date').value;
             const retDate = document.getElementById('ret-date').value;
             const selClass = activeClasses[idx] || 'economy';
@@ -671,6 +670,7 @@
         }
 
         async function searchFlights(overrideDep = null) {
+            if (!apiKey) { console.error("API Key Missing"); return; }
             const from = document.getElementById('from-location').value;
             const to = document.getElementById('to-location').value;
             const dep = overrideDep || document.getElementById('dep-date').value;
@@ -684,11 +684,11 @@
             document.getElementById('flight-loading').classList.remove('hidden');
             document.getElementById('smart-suggestion').classList.add('hidden');
             
-            const sys = `List 4 real airlines for a ${tripType} flight from ${fCode} to ${tCode} on ${dep}. Provide prices for: economy, premium_economy, business in ${cur}. Return a 'smart_suggestion' if cheaper dates found +/- 3 days. JSON only: { "flights": [{ "airline": "", "baggage_checkin": "", "baggage_cabin": "", "policy": "", "classes": { "economy": { "price": "" }, "premium_economy": { "price": "", "diff": "+40%" }, "business": { "price": "", "diff": "+150%" } } }], "suggestion": { "text": "", "newDate": "" } }`;
+            const sys = `List 4 airlines for ${tripType} flight from ${fCode} to ${tCode} on ${dep}. Provide prices for: economy, premium_economy, business in ${cur}. SMART SUGGESTION: Return text/date if +/- 3 days is cheaper. JSON only: { "flights": [{ "airline": "", "baggage_checkin": "", "baggage_cabin": "", "policy": "", "classes": { "economy": { "price": "" }, "premium_economy": { "price": "", "diff": "+40%" }, "business": { "price": "", "diff": "+150%" } } }], "suggestion": { "text": "", "newDate": "" } }`;
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Search ${fCode} to ${tCode}` }] }], systemInstruction: { parts: [{ text: sys }] }, generationConfig: { responseMimeType: "application/json" } })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `Search ${fCode} to ${tCode}` }] }], systemInstruction: { parts: [{ text: sys }] } })
                 });
                 const data = await res.json();
                 const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
@@ -706,10 +706,11 @@
                     div.innerHTML = `<div class="flex flex-col gap-4"><div class="flex items-center gap-4"><div class="w-10 h-10 bg-sky-500/10 rounded-xl flex items-center justify-center text-sky-400"><i class="fa-solid fa-paper-plane"></i></div><h4 class="font-black text-lg text-white">${f.airline}</h4></div><div class="flex gap-2"><span class="class-pill active" data-class="economy" onclick="updateClass(${i}, 'economy')">Economy</span><span class="class-pill" data-class="premium_economy" onclick="updateClass(${i}, 'premium_economy')">Prem Eco <span class="text-sky-500">${f.classes.premium_economy.diff}</span></span><span class="class-pill" data-class="business" onclick="updateClass(${i}, 'business')">Business <span class="text-sky-500">${f.classes.business.diff}</span></span></div></div><div class="text-right"><p class="text-3xl font-black text-sky-400 mb-2 price-display">${f.classes.economy.price}</p><button onclick="openFlightModal(${i})" class="bg-white/5 hover:bg-white/10 text-slate-400 px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Details</button></div>`;
                     document.getElementById('flight-list').appendChild(div);
                 });
-            } catch (e) { document.getElementById('flight-loading').classList.add('hidden'); }
+            } catch (e) { document.getElementById('flight-loading').classList.add('hidden'); console.error(e); }
         }
 
         async function exploreDestination() {
+            if (!apiKey) return;
             const inp = document.getElementById('explorer-input').value.trim();
             if (!inp) return;
             const grid = document.getElementById('places-grid');
@@ -717,9 +718,9 @@
             document.getElementById('explorer-loading').classList.remove('hidden');
             grid.innerHTML = '';
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Explore ${inp}` }] }], systemInstruction: { parts: [{ text: 'JSON: { "places": [{"name": "", "desc": ""}] }' }] }, generationConfig: { responseMimeType: "application/json" } })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `Explore ${inp}` }] }], systemInstruction: { parts: [{ text: 'JSON: { "places": [{"name": "", "desc": ""}] }' }] } })
                 });
                 const data = await res.json();
                 const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
