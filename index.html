@@ -3,370 +3,748 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOSO TRAVELS | AI Destination Discovery</title>
+    <title>MOSO TRAVELS | Global Journey</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800;900&display=swap');
         
         :root {
-            --primary: #0ea5e9;
-            --secondary: #0f172a;
+            --accent: #38bdf8;
+            --bg-dark: #020617;
+            --bg-page: #020617;
+            --card-bg: rgba(30, 41, 59, 0.5);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --nav-bg: rgba(2, 6, 23, 0.8);
+            --dropdown-bg: #0f172a;
+            --modal-overlay: rgba(0, 0, 0, 0.8);
+        }
+
+        body.light-mode {
+            --bg-dark: #f8fafc;
+            --bg-page: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #0f172a;
+            --text-dim: #475569;
+            --border-color: rgba(15, 23, 42, 0.1);
+            --input-bg: #ffffff;
+            --nav-bg: rgba(255, 255, 255, 0.8);
+            --dropdown-bg: #f1f5f9;
+            --modal-overlay: rgba(15, 23, 42, 0.4);
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             scroll-behavior: smooth;
-            background-color: #f8fafc;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
-        .font-serif {
-            font-family: 'Playfair Display', serif;
-        }
+        h1, h2, h3, h4, .font-heading { font-family: 'Outfit', sans-serif; }
 
-        .glass-nav {
-            backdrop-filter: blur(12px);
-            background: rgba(255, 255, 255, 0.8);
-        }
-
-        .hero-gradient {
-            background: radial-gradient(circle at top right, #e0f2fe, transparent),
-                        radial-gradient(circle at bottom left, #f0f9ff, transparent);
-        }
-
-        .search-container {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .search-container:focus-within {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-        }
-
-        .place-card {
-            transition: all 0.3s ease;
-        }
-
-        .place-card:hover {
-            transform: translateY(-8px);
-        }
-
-        .loading-shimmer {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        #lightbox-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(8px);
+        .video-container {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
             align-items: center;
             justify-content: center;
         }
+
+        #hero-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            z-index: -1;
+            filter: brightness(0.3) saturate(0.7);
+        }
+
+        .section-padding { padding: 8rem 1.5rem; }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.15);
+        }
+
+        .nav-link {
+            position: relative;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-dim);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover { color: var(--accent); }
+        .nav-link:hover::after { width: 100%; }
+
+        .sticky-nav {
+            backdrop-filter: blur(20px);
+            background-color: var(--nav-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .currency-select {
+            appearance: none;
+            background: transparent;
+            padding-right: 1rem;
+            cursor: pointer;
+            outline: none;
+            color: var(--accent) !important;
+            font-weight: 800;
+            border: none;
+        }
+
+        .currency-select option {
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+
+        .page-view { display: none; }
+        .page-view.active { display: block; }
+
+        .search-input, .form-input {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+
+        .btn-main {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+        }
+
+        .brand-title {
+            text-shadow: 0 0 30px rgba(56, 189, 248, 0.4), 0 10px 40px rgba(0, 0, 0, 0.8);
+            letter-spacing: -0.05em;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--accent);
+        }
+
+        .suggestion-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--dropdown-bg);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 1rem 1rem;
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+        }
+
+        .suggestion-item:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .trip-type-btn {
+            padding: 8px 24px;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-dim);
+        }
+        .trip-type-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        #flight-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.9) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .class-pill {
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-dim);
+        }
+        .class-pill.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        .smart-suggestion-banner {
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.1), transparent);
+            border-left: 4px solid var(--accent);
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 14px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--text-dim); 
+            border-radius: 10px; 
+            border: 3px solid #020617;
+        }
     </style>
 </head>
-<body class="text-slate-900 overflow-x-hidden">
+<body>
 
-    <!-- Lightbox -->
-    <div id="lightbox-modal" onclick="closeLightbox()">
-        <button class="absolute top-6 right-8 text-white text-4xl hover:text-sky-400 transition-colors">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-        <div class="max-w-5xl w-full p-4 flex flex-col items-center">
-            <img id="lightbox-img" src="" class="max-h-[75vh] rounded-2xl shadow-2xl object-contain border border-white/10" alt="Enlarged">
-            <div id="lightbox-content" class="mt-6 text-center text-white">
-                <h3 id="lightbox-title" class="text-3xl font-bold mb-2"></h3>
-                <p id="lightbox-desc" class="text-slate-300 max-w-2xl"></p>
-            </div>
+    <!-- Ticket Detail Modal -->
+    <div id="flight-modal" onclick="closeFlightModal(event)">
+        <div class="modal-content glass-card p-8 md:p-12 relative" onclick="event.stopPropagation()">
+            <button onclick="closeFlightModal()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+            <div id="modal-body"></div>
         </div>
     </div>
 
-    <!-- Nav -->
-    <nav class="fixed top-0 w-full z-50 glass-nav border-b border-slate-200">
+    <nav class="fixed top-0 w-full z-50 sticky-nav">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="text-2xl font-extrabold tracking-tighter text-sky-600 flex items-center">
-                <i class="fa-solid fa-earth-americas mr-2 text-sky-500"></i>MOSO TRAVELS
+            <div class="text-2xl font-black tracking-tighter cursor-pointer flex items-center gap-2" onclick="showView('hero')">
+                <div class="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-earth-americas text-slate-900 text-sm"></i>
+                </div>
+                <span style="color: var(--text-main)">MOSO</span>
             </div>
-            <div class="hidden md:flex space-x-8 text-sm font-semibold text-slate-600 uppercase tracking-widest">
-                <a href="#" class="hover:text-sky-600 transition-colors">Home</a>
-                <a href="#results" class="hover:text-sky-600 transition-colors">Destinations</a>
-                <a href="#" class="hover:text-sky-600 transition-colors">About</a>
+            
+            <div class="hidden lg:flex space-x-8 items-center">
+                <div class="flex space-x-8 mr-6 border-r border-white/10 pr-8 items-center">
+                    <button onclick="showView('hero')" class="nav-link font-bold">Home</button>
+                    <button onclick="showView('explorer')" class="nav-link">Discovery Explorer</button>
+                    <button onclick="showView('booking')" class="nav-link">Book Flights</button>
+                    <button onclick="showView('feedback')" class="nav-link">Feedback</button>
+                </div>
+                
+                <div class="flex items-center text-[11px] font-bold bg-white/5 px-4 py-2 rounded-full border border-white/10 min-w-[170px]">
+                    <i class="fa-solid fa-coins mr-2 text-sky-500"></i>
+                    <select id="global-currency" onchange="syncCurrency(this, 'mobile')" class="currency-select uppercase">
+                        <option value="INR" selected>INR (₹)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="JPY">JPY (¥)</option>
+                        <option value="AED">AED (د.إ)</option>
+                    </select>
+                </div>
+
+                <button onclick="toggleTheme()" class="theme-toggle" title="Switch Mode">
+                    <i class="fa-solid fa-circle-half-stroke"></i>
+                </button>
             </div>
-            <button class="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-sky-600 transition-all">
-                Sign In
+
+            <button class="lg:hidden text-2xl text-sky-500" onclick="toggleMenu()">
+                <i class="fa-solid fa-bars-staggered"></i>
             </button>
         </div>
     </nav>
 
-    <!-- Hero -->
-    <header class="hero-gradient pt-40 pb-20 px-6 min-h-[70vh] flex flex-col items-center justify-center text-center">
-        <span class="bg-sky-100 text-sky-700 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 animate-bounce">
-            AI-Powered Discovery
-        </span>
-        <h1 class="text-5xl md:text-8xl font-black text-slate-900 mb-8 max-w-5xl tracking-tight leading-none">
-            Where do you <span class="text-sky-600">want to go</span> next?
-        </h1>
-        <p class="text-lg md:text-xl text-slate-500 mb-12 max-w-2xl">
-            Type any city, country, or hidden gem. Our AI will curate the perfect list of places to explore.
-        </p>
-
-        <!-- Search Bar -->
-        <div class="w-full max-w-2xl search-container relative group">
-            <div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 group-focus-within:text-sky-500 transition-colors"></i>
-            </div>
-            <input 
-                type="text" 
-                id="destination-input"
-                placeholder="Ex: Paris, Kyoto, Iceland..."
-                class="w-full pl-14 pr-40 py-6 rounded-2xl border-2 border-slate-200 bg-white text-lg focus:outline-none focus:border-sky-500 shadow-xl transition-all"
-            >
-            <button 
-                onclick="searchDestination()"
-                class="absolute right-3 top-3 bottom-3 px-8 bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700 transition-all active:scale-95 shadow-lg shadow-sky-200"
-            >
-                Search
-            </button>
-        </div>
+    <main id="main-content">
         
-        <div class="mt-8 flex flex-wrap justify-center gap-3 text-sm font-semibold text-slate-400">
-            <span>Trending:</span>
-            <button onclick="setInput('Dubai')" class="hover:text-sky-600">Dubai</button>
-            <button onclick="setInput('Bali')" class="hover:text-sky-600">Bali</button>
-            <button onclick="setInput('New York')" class="hover:text-sky-600">New York</button>
-            <button onclick="setInput('Prague')" class="hover:text-sky-600">Prague</button>
-        </div>
-    </header>
-
-    <!-- Results Section -->
-    <section id="results" class="max-w-7xl mx-auto px-6 py-20 min-h-screen">
-        <div id="results-header" class="hidden mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-                <h2 id="result-title" class="text-4xl md:text-5xl font-black text-slate-900">Explore New Delhi</h2>
-                <p id="result-subtitle" class="text-slate-500 mt-2">Discovering the best of this destination</p>
-            </div>
-            <div class="flex items-center space-x-2 text-sm font-bold text-sky-600 bg-sky-50 px-4 py-2 rounded-lg">
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                <span>AI SUGGESTIONS</span>
-            </div>
-        </div>
-
-        <!-- Initial Placeholder -->
-        <div id="initial-placeholder" class="text-center py-20">
-            <div class="text-6xl text-slate-200 mb-6">
-                <i class="fa-solid fa-map-location-dot"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-slate-400">Your search results will appear here</h3>
-        </div>
-
-        <!-- Loading Skeleton -->
-        <div id="loading-state" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div class="space-y-4">
-                <div class="h-64 rounded-2xl loading-shimmer"></div>
-                <div class="h-6 w-3/4 rounded loading-shimmer"></div>
-                <div class="h-4 w-full rounded loading-shimmer"></div>
-                <div class="h-4 w-5/6 rounded loading-shimmer"></div>
-            </div>
-            <div class="space-y-4">
-                <div class="h-64 rounded-2xl loading-shimmer"></div>
-                <div class="h-6 w-3/4 rounded loading-shimmer"></div>
-                <div class="h-4 w-full rounded loading-shimmer"></div>
-                <div class="h-4 w-5/6 rounded loading-shimmer"></div>
-            </div>
-            <div class="space-y-4">
-                <div class="h-64 rounded-2xl loading-shimmer"></div>
-                <div class="h-6 w-3/4 rounded loading-shimmer"></div>
-                <div class="h-4 w-full rounded loading-shimmer"></div>
-                <div class="h-4 w-5/6 rounded loading-shimmer"></div>
-            </div>
-        </div>
-
-        <!-- Error State -->
-        <div id="error-state" class="hidden text-center py-20 text-red-500">
-            <i class="fa-solid fa-circle-exclamation text-4xl mb-4"></i>
-            <h3 class="text-xl font-bold" id="error-message">Unable to fetch places. Please try again.</h3>
-        </div>
-
-        <!-- Dynamic Content Grid -->
-        <div id="places-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-white py-20 px-6 mt-20">
-        <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
-            <div class="col-span-2">
-                <div class="text-3xl font-black text-sky-400 mb-6">MOSO TRAVELS</div>
-                <p class="text-slate-400 max-w-sm leading-relaxed mb-8">
-                    Your personal travel companion powered by artificial intelligence. Explore every corner of the world with ease and inspiration.
-                </p>
-                <div class="flex space-x-6 text-xl text-slate-400">
-                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
-                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-tiktok"></i></a>
+        <!-- Home Section -->
+        <section id="view-hero" class="page-view active">
+            <div class="video-container">
+                <video autoplay muted loop playsinline id="hero-video">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-top-aerial-shot-of-a-temple-in-india-40294-large.mp4" type="video/mp4">
+                </video>
+                <div class="relative z-10 text-center px-4">
+                    <h1 class="brand-title text-7xl md:text-[10rem] mb-12 text-white font-black tracking-tighter leading-none">
+                        MOSO <span class="brand-accent text-sky-400">TRAVELS</span>
+                    </h1>
+                    <div class="flex flex-col md:flex-row justify-center gap-8 mb-16">
+                        <button onclick="showView('explorer')" class="btn-main bg-sky-600 hover:bg-sky-500 text-white px-16 py-6 rounded-2xl font-black text-xl tracking-wide uppercase">Start Discovery</button>
+                        <button onclick="showView('booking')" class="btn-main bg-white text-slate-950 px-16 py-6 rounded-2xl font-black text-xl tracking-wide uppercase">Book Flights</button>
+                    </div>
                 </div>
             </div>
-            <div>
-                <h4 class="font-bold mb-6 text-sky-500">Quick Links</h4>
-                <ul class="space-y-4 text-slate-400">
-                    <li><a href="#" class="hover:text-white transition-colors">Home</a></li>
-                    <li><a href="#" class="hover:text-white transition-colors">Popular Destinatios</a></li>
-                    <li><a href="#" class="hover:text-white transition-colors">Travel Guides</a></li>
-                    <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-bold mb-6 text-sky-500">Subscribe</h4>
-                <div class="flex">
-                    <input type="email" placeholder="Email" class="bg-slate-800 border-none px-4 py-2 rounded-l-lg w-full focus:ring-1 focus:ring-sky-500">
-                    <button class="bg-sky-600 px-4 py-2 rounded-r-lg font-bold">Go</button>
+
+            <section class="section-padding city-section"><div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center"><div><span class="text-sky-400 font-black tracking-[0.4em] uppercase text-[10px] mb-4 block">Destination 01</span><h2 class="text-5xl md:text-8xl font-black mb-8 tracking-tighter">Hyderabad</h2><p class="text-xl leading-relaxed font-medium mb-10" style="color: var(--text-dim)">The City of Pearls. Heritage meets High-Tech.</p></div><div class="glass-card p-10"><h4 class="text-sky-400 font-bold uppercase text-xs tracking-widest mb-6">Experience</h4><p style="color: var(--text-dim)">Iconic Charminar walks and world-famous Dum Biryani.</p></div></div></section>
+        </section>
+
+        <!-- Discovery Explorer View -->
+        <section id="view-explorer" class="page-view section-padding bg-slate-950 pt-32 min-h-screen">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex justify-between items-center mb-10">
+                    <button onclick="showView('hero')" class="flex items-center gap-2 text-slate-500 hover:text-sky-400 font-bold text-xs uppercase tracking-widest transition-colors"><i class="fa-solid fa-arrow-left"></i> Home</button>
+                    <button onclick="showView('booking')" class="bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-white/10 transition-all">Book Flights <i class="fa-solid fa-plane-up ml-2 text-sky-500"></i></button>
+                </div>
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-7xl mb-6 text-white font-black tracking-tight">AI Discovery <span class="text-sky-500">Explorer</span></h2>
+                </div>
+                <div class="max-w-2xl mx-auto relative group mb-24">
+                    <input id="explorer-input" type="text" oninput="handleExplorerInput()" placeholder="Search City, Country or Landmark..." class="w-full pl-8 pr-44 py-7 rounded-3xl search-input outline-none text-xl font-medium shadow-2xl">
+                    <button onclick="exploreDestination()" class="absolute right-4 top-4 bottom-4 px-10 bg-sky-600 text-white rounded-2xl font-bold hover:bg-sky-500 transition-all flex items-center gap-2 shadow-lg"><i class="fa-solid fa-magnifying-glass text-sm"></i> Explore</button>
+                </div>
+                <div id="explorer-results" class="hidden">
+                    <div id="explorer-loading" class="hidden grid md:grid-cols-3 gap-8"><div class="h-64 rounded-3xl loading-shimmer"></div><div class="h-64 rounded-3xl loading-shimmer"></div><div class="h-64 rounded-3xl loading-shimmer"></div></div>
+                    <div id="places-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20"></div>
                 </div>
             </div>
-        </div>
-        <div class="max-w-7xl mx-auto pt-12 mt-12 border-t border-slate-800 text-center text-slate-500 text-sm font-semibold tracking-widest">
-            © 2024 MOSO TRAVELS. REDEFINING DISCOVERY.
-        </div>
+        </section>
+
+        <!-- Flight Booking View -->
+        <section id="view-booking" class="page-view section-padding bg-slate-950 pt-32 min-h-screen">
+            <div class="max-w-6xl mx-auto text-center">
+                <div class="flex justify-between items-center mb-10"><button onclick="showView('hero')" class="flex items-center gap-2 text-slate-500 hover:text-sky-400 font-bold text-xs uppercase tracking-widest transition-colors"><i class="fa-solid fa-arrow-left"></i> Home</button></div>
+                <h2 class="text-4xl md:text-7xl mb-6 text-white font-black tracking-tight">Find <span class="text-sky-500">Tickets</span></h2>
+                
+                <div class="flex justify-center gap-4 mb-10">
+                    <button id="btn-oneway" onclick="setTripType('oneway')" class="trip-type-btn active">One Way</button>
+                    <button id="btn-return" onclick="setTripType('return')" class="trip-type-btn">Return</button>
+                </div>
+
+                <div class="glass-card p-8 md:p-12 mb-16">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 text-left mb-8">
+                        <div class="flex flex-col relative">
+                            <label class="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest ml-1">Departure From</label>
+                            <input id="from-location" type="text" oninput="handleFlightInput('from-location')" placeholder="City or Code (e.g. IXR)" class="px-6 py-5 rounded-2xl search-input outline-none text-sm" autocomplete="off">
+                            <div id="from-suggestions" class="suggestion-box"></div>
+                        </div>
+                        <div class="flex flex-col relative">
+                            <label class="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest ml-1">Arrival At</label>
+                            <input id="to-location" type="text" oninput="handleFlightInput('to-location')" placeholder="City or Code (e.g. DEL)" class="px-6 py-5 rounded-2xl search-input outline-none text-sm" autocomplete="off">
+                            <div id="to-suggestions" class="suggestion-box"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest ml-1">Departure Date</label>
+                            <!-- UPDATED onchange to fix date logic -->
+                            <input id="dep-date" type="date" onchange="updateMinReturnDate()" oninput="validateCheckFareButton()" class="px-6 py-5 rounded-2xl search-input outline-none text-sm">
+                        </div>
+                        <div id="return-date-container" class="flex flex-col opacity-20 pointer-events-none transition-all duration-300">
+                            <label class="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest ml-1">Return Date</label>
+                            <input id="ret-date" type="date" oninput="validateCheckFareButton()" class="px-6 py-5 rounded-2xl search-input outline-none text-sm">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button id="check-fares-btn" onclick="searchFlights()" disabled class="bg-sky-600 hover:bg-sky-500 text-white px-16 py-5 rounded-2xl font-black transition-all disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest text-sm">Check Fares</button>
+                    </div>
+
+                    <div id="flight-results-container" class="hidden mt-12 border-t border-white/5 pt-12 text-left">
+                        <div id="smart-suggestion" class="hidden smart-suggestion-banner fade-in">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 bg-sky-500/20 rounded-full flex items-center justify-center text-sky-400"><i class="fa-solid fa-lightbulb"></i></div>
+                                <p id="suggestion-text" class="text-sm font-bold text-sky-400"></p>
+                            </div>
+                            <button id="apply-suggestion-btn" class="bg-sky-400 text-slate-900 px-6 py-2 rounded-xl text-[10px] font-black uppercase">Switch Dates</button>
+                        </div>
+                        <div id="flight-loading" class="hidden space-y-6"><div class="h-24 rounded-3xl loading-shimmer w-full"></div></div>
+                        <div id="flight-list" class="space-y-6"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feedback Section -->
+        <section id="view-feedback" class="page-view section-padding bg-slate-950 pt-32 min-h-screen">
+            <div class="max-w-7xl mx-auto text-center">
+                <button onclick="showView('hero')" class="flex items-center gap-2 text-slate-500 hover:text-sky-400 font-bold text-xs uppercase tracking-widest mb-10 transition-colors">
+                    <i class="fa-solid fa-chevron-left"></i> Back Home
+                </button>
+                <h2 class="text-4xl md:text-7xl mb-16 text-white font-black tracking-tight">Traveler <span class="text-sky-500">Feedback</span></h2>
+                
+                <div class="grid lg:grid-cols-2 gap-16 items-start">
+                    <div id="feedback-main-wrapper" class="glass-card p-10 text-left relative overflow-hidden">
+                        <div id="feedback-form-state">
+                            <h4 class="text-white font-black text-xl mb-8 uppercase tracking-widest">Share Your Experience</h4>
+                            <form id="feedback-actual-form" onsubmit="submitFeedback(event)" class="space-y-6">
+                                <input type="text" name="name" id="feedback-name" required class="search-input w-full px-6 py-4 rounded-xl text-sm" placeholder="Full Name">
+                                <input type="email" name="email" id="feedback-email" required class="search-input w-full px-6 py-4 rounded-xl text-sm" placeholder="Email Address">
+                                <textarea name="message" id="feedback-msg" required rows="5" class="search-input w-full px-6 py-4 rounded-xl text-sm resize-none" placeholder="Tell us about your journey with MOSO travels..."></textarea>
+                                <button type="submit" id="feedback-submit-btn" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-4 rounded-xl font-black uppercase tracking-widest text-xs transition-all shadow-lg">Send Feedback</button>
+                            </form>
+                        </div>
+
+                        <div id="feedback-success-state" class="hidden flex flex-col items-center justify-center py-10 text-center fade-in">
+                            <div class="w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-6">
+                                <i class="fa-solid fa-circle-check text-4xl"></i>
+                            </div>
+                            <h4 class="text-2xl font-black text-white mb-4">Thank You!</h4>
+                            <p class="text-slate-400 mb-8 max-w-xs">Your feedback has been successfully recorded.</p>
+                            <button onclick="resetFeedbackForm()" class="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all">
+                                Submit New Feedback
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8 text-left">
+                        <div class="glass-card p-8">
+                            <p class="text-sm leading-relaxed" style="color: var(--text-dim)">"The interface is incredibly smooth. Premium design!"</p>
+                            <h5 class="mt-4 font-bold text-white text-sm">- Ananya Sharma</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="py-20 text-center border-t border-white/5" style="background: var(--bg-dark)">
+        <div class="text-3xl font-black mb-8 tracking-tighter flex justify-center items-center gap-2"><div class="w-6 h-6 bg-sky-500 rounded flex items-center justify-center"><i class="fa-solid fa-earth-americas text-slate-900 text-[10px]"></i></div>MOSO TRAVELS</div>
+        <p class="text-slate-500 text-[10px] font-black uppercase tracking-[0.8em]">© <span id="current-year"></span> GLOBAL DISCOVERY. ALL RIGHTS RESERVED.</p>
     </footer>
 
     <script>
-        const apiKey = ""; // Runtime provides the key
+        const apiKey = ""; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuRdsbSBWb7IFnsxEmT2AmpeJ9NcnA85M34MIqZ5MVm2EA1S44S9OMq01On65I_nBu/exec"; 
 
-        function setInput(val) {
-            const input = document.getElementById('destination-input');
-            input.value = val;
-            searchDestination();
-        }
+        let tripType = 'oneway';
+        let currentFlightData = [];
+        let activeClasses = {};
 
-        async function searchDestination() {
-            const dest = document.getElementById('destination-input').value.trim();
-            if (!dest) return;
+        const airportData = [
+            "Indira Gandhi International Airport, Delhi (DEL)", "Chhatrapati Shivaji Maharaj International Airport, Mumbai (BOM)",
+            "Kempegowda International Airport, Bengaluru (BLR)", "Rajiv Gandhi International Airport, Hyderabad (HYD)",
+            "Birsa Munda Airport, Ranchi (IXR)", "Jay Prakash Narayan International Airport, Patna (PAT)",
+            "Chaudhary Charan Singh International Airport, Lucknow (LKO)", "Chennai International Airport, Chennai (MAA)",
+            "Netaji Subhash Chandra Bose International Airport, Kolkata (CCU)", "Pune Airport, Pune (PNQ)",
+            "Heathrow Airport, London (LHR)", "John F. Kennedy International Airport, New York (JFK)"
+        ];
 
-            // Reset UI states
-            document.getElementById('initial-placeholder').classList.add('hidden');
-            document.getElementById('error-state').classList.add('hidden');
-            document.getElementById('results-header').classList.add('hidden');
-            document.getElementById('places-grid').innerHTML = '';
-            document.getElementById('loading-state').classList.remove('hidden');
-
-            // Scroll to results
-            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-
-            const systemPrompt = "You are a professional travel guide API. Provide the most iconic and interesting tourist places for the user's destination. Return ONLY a JSON object with a list of 'places'. Each place must have: 'name', 'description', 'category', and 'imgKeyword' (a specific phrase for finding a relevant high-quality photo).";
-            const userQuery = `Suggest 6 must-visit tourist places for: ${dest}. Return JSON format.`;
-
-            try {
-                const response = await fetchWithRetry(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-                    {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: userQuery }] }],
-                            systemInstruction: { parts: [{ text: systemPrompt }] },
-                            generationConfig: { responseMimeType: "application/json" }
-                        })
-                    }
-                );
-
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                if (!text) throw new Error("No data received");
-                
-                const data = JSON.parse(text);
-                renderResults(dest, data.places);
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('loading-state').classList.add('hidden');
-                document.getElementById('error-state').classList.remove('hidden');
-                document.getElementById('error-message').innerText = "Oops! We couldn't fly to that destination right now. Please try again.";
-            }
-        }
-
-        async function fetchWithRetry(url, options, retries = 5, backoff = 1000) {
-            try {
-                const res = await fetch(url, options);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res;
-            } catch (err) {
-                if (retries > 0) {
-                    await new Promise(r => setTimeout(r, backoff));
-                    return fetchWithRetry(url, options, retries - 1, backoff * 2);
-                }
-                throw err;
-            }
-        }
-
-        function renderResults(dest, places) {
-            document.getElementById('loading-state').classList.add('hidden');
-            document.getElementById('results-header').classList.remove('hidden');
-            document.getElementById('result-title').innerText = `Explore ${dest}`;
+        window.onload = function() {
+            document.getElementById('current-year').innerText = new Date().getFullYear();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dep-date').min = today;
+            document.getElementById('ret-date').min = today;
             
-            const grid = document.getElementById('places-grid');
-            
-            places.forEach(place => {
-                const imgUrl = `https://images.unsplash.com/photo-1524492707947-2f85a64b67ad?auto=format&fit=crop&q=80&w=800`; // Placeholder fallback
-                const dynamicImg = `https://source.unsplash.com/featured/800x600?${encodeURIComponent(place.imgKeyword || place.name)}`;
-                
-                const card = document.createElement('div');
-                card.className = 'place-card bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group cursor-pointer';
-                card.onclick = () => openLightbox(dynamicImg, place.name, place.description);
-                
-                card.innerHTML = `
-                    <div class="h-64 overflow-hidden relative">
-                        <img 
-                            src="${dynamicImg}" 
-                            onerror="this.src='https://images.unsplash.com/photo-1524492707947-2f85a64b67ad?auto=format&fit=crop&q=80&w=800'"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="${place.name}"
-                        >
-                        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-sky-600">
-                            ${place.category || 'Discovery'}
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <h4 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-sky-600 transition-colors">${place.name}</h4>
-                        <p class="text-slate-500 text-sm line-clamp-3 leading-relaxed">
-                            ${place.description}
-                        </p>
-                        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-400">READ MORE</span>
-                            <i class="fa-solid fa-arrow-right text-sky-500 transform transition-transform group-hover:translate-x-1"></i>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.relative')) document.querySelectorAll('.suggestion-box').forEach(box => box.style.display = 'none');
             });
+        };
+
+        // Utility to clean AI Response JSON
+        function cleanJSON(str) {
+            return str.replace(/```json/g, "").replace(/```/g, "").trim();
         }
 
-        // Lightbox
-        function openLightbox(src, title, desc) {
-            const modal = document.getElementById('lightbox-modal');
-            const img = document.getElementById('lightbox-img');
-            img.src = src;
-            document.getElementById('lightbox-title').innerText = title;
-            document.getElementById('lightbox-desc').innerText = desc;
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+        // Fix: Update Min Return Date when Departure Changes
+        function updateMinReturnDate() {
+            const depDate = document.getElementById('dep-date').value;
+            const retInput = document.getElementById('ret-date');
+            retInput.min = depDate;
+            if (retInput.value && retInput.value < depDate) {
+                retInput.value = depDate;
+            }
         }
 
-        function closeLightbox() {
-            document.getElementById('lightbox-modal').style.display = 'none';
-            document.body.style.overflow = 'auto';
+        async function submitFeedback(event) {
+            event.preventDefault();
+            const btn = document.getElementById('feedback-submit-btn');
+            const formState = document.getElementById('feedback-form-state');
+            const successState = document.getElementById('feedback-success-state');
+            
+            const formData = {
+                name: document.getElementById('feedback-name').value,
+                email: document.getElementById('feedback-email').value,
+                message: document.getElementById('feedback-msg').value,
+                timestamp: new Date().toLocaleString()
+            };
+
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                formState.classList.add('hidden');
+                successState.classList.remove('hidden');
+            } catch (error) {
+                console.error("Submission error:", error);
+                formState.classList.add('hidden');
+                successState.classList.remove('hidden');
+            }
         }
 
-        // Listen for Enter key
-        document.getElementById('destination-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') searchDestination();
+        function resetFeedbackForm() {
+            document.getElementById('feedback-actual-form').reset();
+            document.getElementById('feedback-form-state').classList.remove('hidden');
+            document.getElementById('feedback-success-state').classList.add('hidden');
+            document.getElementById('feedback-submit-btn').innerText = "Send Feedback";
+            document.getElementById('feedback-submit-btn').disabled = false;
+        }
+
+        function toggleTheme() { document.body.classList.toggle('light-mode'); }
+        
+        function showView(viewId) {
+            const views = document.querySelectorAll('.page-view');
+            const activeView = document.getElementById('view-' + viewId);
+            if (activeView) {
+                views.forEach(v => v.classList.remove('active'));
+                activeView.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            const m = document.getElementById('mobile-menu'); if (m) m.classList.add('hidden');
+        }
+
+        function openFlightModal(flightIndex) {
+            const flight = currentFlightData[flightIndex];
+            const selClass = activeClasses[flightIndex] || 'economy';
+            const price = flight.classes[selClass].price;
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `
+                <div class="mb-8 pb-8 border-b border-white/10">
+                    <h3 class="text-3xl font-black text-white">${flight.airline}</h3>
+                    <p class="text-sky-400 font-bold uppercase tracking-widest text-xs">${selClass.replace('_',' ')} Journey</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div><h5 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Baggage</h5><p class="text-sm text-slate-300">Check-in: ${flight.baggage_checkin}</p><p class="text-sm text-slate-300">Cabin: ${flight.baggage_cabin}</p></div>
+                    <div><h5 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Policies</h5><p class="text-xs leading-relaxed text-slate-400">${flight.policy}</p></div>
+                </div>
+                <div class="flex items-center justify-between pt-6 border-t border-white/10">
+                    <div><p class="text-4xl font-black text-sky-400">${price}</p></div>
+                    <button onclick="finalRedirection(${flightIndex})" class="bg-sky-600 hover:bg-sky-500 text-white px-10 py-4 rounded-xl font-black uppercase text-sm">Book Ticket</button>
+                </div>`;
+            document.getElementById('flight-modal').style.display = 'flex';
+        }
+
+        function closeFlightModal() { document.getElementById('flight-modal').style.display = 'none'; }
+
+        function finalRedirection(idx) {
+            const flight = currentFlightData[idx];
+            const fromStr = document.getElementById('from-location').value;
+            const toStr = document.getElementById('to-location').value;
+            const fCode = fromStr.match(/\((.*?)\)/)?.[1] || fromStr.slice(-4, -1);
+            const tCode = toStr.match(/\((.*?)\)/)?.[1] || toStr.slice(-4, -1);
+            const depDate = document.getElementById('dep-date').value;
+            const retDate = document.getElementById('ret-date').value;
+            const selClass = activeClasses[idx] || 'economy';
+            
+            let url = `https://www.google.com/travel/flights?q=Flights%20from%20${fCode}%20to%20${tCode}%20on%20${depDate}`;
+            if (tripType === 'return' && retDate) url += `%20through%20${retDate}`;
+            url += `%20with%20${encodeURIComponent(flight.airline)}%20class%20${selClass}`;
+            window.open(url, '_blank');
+        }
+
+        function setTripType(type) {
+            tripType = type;
+            document.getElementById('btn-oneway').classList.toggle('active', type === 'oneway');
+            document.getElementById('btn-return').classList.toggle('active', type === 'return');
+            const rc = document.getElementById('return-date-container');
+            rc.classList.toggle('opacity-20', type === 'oneway');
+            rc.classList.toggle('pointer-events-none', type === 'oneway');
+            validateCheckFareButton();
+        }
+
+        function validateCheckFareButton() {
+            const f = document.getElementById('from-location').value;
+            const t = document.getElementById('to-location').value;
+            const d = document.getElementById('dep-date').value;
+            const r = document.getElementById('ret-date').value;
+            const valid = airportData.includes(f) && airportData.includes(t) && d !== "" && (tripType === 'oneway' || r !== "");
+            document.getElementById('check-fares-btn').disabled = !valid;
+        }
+
+        function handleFlightInput(id) {
+            const inp = document.getElementById(id);
+            const sub = document.getElementById(id === 'from-location' ? 'from-suggestions' : 'to-suggestions');
+            validateCheckFareButton();
+            const q = inp.value.toLowerCase().trim();
+            if (q.length < 1) { sub.style.display = 'none'; return; }
+            const matches = airportData.filter(n => n.toLowerCase().includes(q));
+            if (matches.length > 0) {
+                sub.innerHTML = matches.map(m => `<div class="suggestion-item" onclick="selectSuggestion('${id}', '${m.replace(/'/g, "\\'")}')"><i class="fa-solid fa-plane-departure"></i> ${m}</div>`).join('');
+                sub.style.display = 'block';
+            } else sub.style.display = 'none';
+        }
+
+        function selectSuggestion(id, val) {
+            document.getElementById(id).value = val;
+            document.querySelectorAll('.suggestion-box').forEach(b => b.style.display = 'none');
+            validateCheckFareButton();
+        }
+
+        function updateClass(idx, cn) {
+            activeClasses[idx] = cn;
+            const f = currentFlightData[idx];
+            const card = document.getElementById(`flight-card-${idx}`);
+            card.querySelector('.price-display').innerText = f.classes[cn].price;
+            card.querySelectorAll('.class-pill').forEach(p => p.classList.toggle('active', p.dataset.class === cn));
+        }
+
+        async function searchFlights(overrideDep = null) {
+            const from = document.getElementById('from-location').value;
+            const to = document.getElementById('to-location').value;
+            const dep = overrideDep || document.getElementById('dep-date').value;
+            const ret = document.getElementById('ret-date').value;
+            const fCode = from.match(/\((.*?)\)/)?.[1];
+            const tCode = to.match(/\((.*?)\)/)?.[1];
+            const cur = document.getElementById('global-currency').value;
+            if (overrideDep) document.getElementById('dep-date').value = overrideDep;
+            document.getElementById('flight-results-container').classList.remove('hidden');
+            document.getElementById('flight-list').innerHTML = '';
+            document.getElementById('flight-loading').classList.remove('hidden');
+            document.getElementById('smart-suggestion').classList.add('hidden');
+            
+            const sys = `List 4 real airlines for a ${tripType} flight from ${fCode} to ${tCode} on ${dep}. Provide prices for: economy, premium_economy, business in ${cur}. Return a 'smart_suggestion' if cheaper dates found +/- 3 days. JSON only: { "flights": [{ "airline": "", "baggage_checkin": "", "baggage_cabin": "", "policy": "", "classes": { "economy": { "price": "" }, "premium_economy": { "price": "", "diff": "+40%" }, "business": { "price": "", "diff": "+150%" } } }], "suggestion": { "text": "", "newDate": "" } }`;
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `Search ${fCode} to ${tCode}` }] }], systemInstruction: { parts: [{ text: sys }] }, generationConfig: { responseMimeType: "application/json" } })
+                });
+                const data = await res.json();
+                const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
+                currentFlightData = result.flights; activeClasses = {}; 
+                document.getElementById('flight-loading').classList.add('hidden');
+                if (result.suggestion && result.suggestion.text) {
+                    document.getElementById('smart-suggestion').classList.remove('hidden');
+                    document.getElementById('suggestion-text').innerText = result.suggestion.text;
+                    document.getElementById('apply-suggestion-btn').onclick = () => searchFlights(result.suggestion.newDate);
+                }
+                result.flights.forEach((f, i) => {
+                    const div = document.createElement('div');
+                    div.id = `flight-card-${i}`;
+                    div.className = "glass-card p-6 flex flex-col md:flex-row justify-between items-center gap-6 fade-in shadow-lg";
+                    div.innerHTML = `<div class="flex flex-col gap-4"><div class="flex items-center gap-4"><div class="w-10 h-10 bg-sky-500/10 rounded-xl flex items-center justify-center text-sky-400"><i class="fa-solid fa-paper-plane"></i></div><h4 class="font-black text-lg text-white">${f.airline}</h4></div><div class="flex gap-2"><span class="class-pill active" data-class="economy" onclick="updateClass(${i}, 'economy')">Economy</span><span class="class-pill" data-class="premium_economy" onclick="updateClass(${i}, 'premium_economy')">Prem Eco <span class="text-sky-500">${f.classes.premium_economy.diff}</span></span><span class="class-pill" data-class="business" onclick="updateClass(${i}, 'business')">Business <span class="text-sky-500">${f.classes.business.diff}</span></span></div></div><div class="text-right"><p class="text-3xl font-black text-sky-400 mb-2 price-display">${f.classes.economy.price}</p><button onclick="openFlightModal(${i})" class="bg-white/5 hover:bg-white/10 text-slate-400 px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Details</button></div>`;
+                    document.getElementById('flight-list').appendChild(div);
+                });
+            } catch (e) { document.getElementById('flight-loading').classList.add('hidden'); }
+        }
+
+        async function exploreDestination() {
+            const inp = document.getElementById('explorer-input').value.trim();
+            if (!inp) return;
+            const grid = document.getElementById('places-grid');
+            document.getElementById('explorer-results').classList.remove('hidden');
+            document.getElementById('explorer-loading').classList.remove('hidden');
+            grid.innerHTML = '';
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `Explore ${inp}` }] }], systemInstruction: { parts: [{ text: 'JSON: { "places": [{"name": "", "desc": ""}] }' }] }, generationConfig: { responseMimeType: "application/json" } })
+                });
+                const data = await res.json();
+                const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
+                document.getElementById('explorer-loading').classList.add('hidden');
+                result.places.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = "glass-card p-8 fade-in clickable-card";
+                    card.onclick = () => window.open(`https://www.google.com/search?q=${encodeURIComponent(p.name)}+details+photos`, '_blank');
+                    card.innerHTML = `<h5 class="font-black mb-4 uppercase text-xs text-white border-b border-white/5 pb-4">${p.name}</h5><p class="text-sm leading-relaxed" style="color: var(--text-dim)">${p.desc}</p>`;
+                    grid.appendChild(card);
+                });
+            } catch (e) { document.getElementById('explorer-loading').classList.add('hidden'); }
+        }
+
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) nav.classList.add('shadow-2xl', 'py-2');
+            else nav.classList.remove('shadow-2xl', 'py-2');
         });
+        function toggleMenu() { const m = document.getElementById('mobile-menu'); if (m) m.classList.toggle('hidden'); }
+        function syncCurrency(el, targetType) {
+            const tid = targetType === 'mobile' ? 'mobile-currency' : 'global-currency';
+            const t = document.getElementById(tid); if (t) t.value = el.value;
+        }
+        function handleExplorerInput() { const r = document.getElementById('explorer-results'); if (r) r.classList.add('hidden'); }
     </script>
 </body>
 </html>
