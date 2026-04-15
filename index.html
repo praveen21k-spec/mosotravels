@@ -294,7 +294,6 @@
 </head>
 <body>
 
-    <!-- Ticket Detail Modal -->
     <div id="flight-modal" onclick="closeFlightModal(event)">
         <div class="modal-content glass-card p-8 md:p-12 relative" onclick="event.stopPropagation()">
             <button onclick="closeFlightModal()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
@@ -346,7 +345,6 @@
 
     <main id="main-content">
         
-        <!-- Home Section -->
         <section id="view-hero" class="page-view active">
             <div class="video-container">
                 <video autoplay muted loop playsinline id="hero-video">
@@ -366,7 +364,6 @@
             <section class="section-padding city-section"><div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center"><div><span class="text-sky-400 font-black tracking-[0.4em] uppercase text-[10px] mb-4 block">Destination 01</span><h2 class="text-5xl md:text-8xl font-black mb-8 tracking-tighter">Hyderabad</h2><p class="text-xl leading-relaxed font-medium mb-10" style="color: var(--text-dim)">The City of Pearls. Heritage meets High-Tech.</p></div><div class="glass-card p-10"><h4 class="text-sky-400 font-bold uppercase text-xs tracking-widest mb-6">Experience</h4><p style="color: var(--text-dim)">Iconic Charminar walks and world-famous Dum Biryani.</p></div></div></section>
         </section>
 
-        <!-- Discovery Explorer View -->
         <section id="view-explorer" class="page-view section-padding bg-slate-950 pt-32 min-h-screen">
             <div class="max-w-7xl mx-auto">
                 <div class="flex justify-between items-center mb-10">
@@ -387,7 +384,6 @@
             </div>
         </section>
 
-        <!-- Flight Booking View -->
         <section id="view-booking" class="page-view section-padding bg-slate-950 pt-32 min-h-screen">
             <div class="max-w-6xl mx-auto text-center">
                 <div class="flex justify-between items-center mb-10"><button onclick="showView('hero')" class="flex items-center gap-2 text-slate-500 hover:text-sky-400 font-bold text-xs uppercase tracking-widest transition-colors"><i class="fa-solid fa-arrow-left"></i> Home</button></div>
@@ -412,7 +408,6 @@
                         </div>
                         <div class="flex flex-col">
                             <label class="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest ml-1">Departure Date</label>
-                            <!-- UPDATED onchange to fix date logic -->
                             <input id="dep-date" type="date" onchange="updateMinReturnDate()" oninput="validateCheckFareButton()" class="px-6 py-5 rounded-2xl search-input outline-none text-sm">
                         </div>
                         <div id="return-date-container" class="flex flex-col opacity-20 pointer-events-none transition-all duration-300">
@@ -440,7 +435,6 @@
             </div>
         </section>
 
-        <!-- Feedback Section -->
         <section id="view-feedback" class="page-view section-padding bg-slate-950 pt-32 min-h-screen">
             <div class="max-w-7xl mx-auto text-center">
                 <button onclick="showView('hero')" class="flex items-center gap-2 text-slate-500 hover:text-sky-400 font-bold text-xs uppercase tracking-widest mb-10 transition-colors">
@@ -491,7 +485,7 @@
 
     <script>
        // const apiKey = ""; 
-const GEMINI_API = "/.netlify/functions/gemini";
+        const GEMINI_API = "/.netlify/functions/gemini";
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuRdsbSBWb7IFnsxEmT2AmpeJ9NcnA85M34MIqZ5MVm2EA1S44S9OMq01On65I_nBu/exec"; 
 
         let tripType = 'oneway';
@@ -687,30 +681,30 @@ const GEMINI_API = "/.netlify/functions/gemini";
             
             const sys = `List 4 real airlines for a ${tripType} flight from ${fCode} to ${tCode} on ${dep}. Provide prices for: economy, premium_economy, business in ${cur}. Return a 'smart_suggestion' if cheaper dates found +/- 3 days. JSON only: { "flights": [{ "airline": "", "baggage_checkin": "", "baggage_cabin": "", "policy": "", "classes": { "economy": { "price": "" }, "premium_economy": { "price": "", "diff": "+40%" }, "business": { "price": "", "diff": "+150%" } } }], "suggestion": { "text": "", "newDate": "" } }`;
             try {
-             const res = await fetch(GEMINI_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        contents: [{ parts: [{ text: `Search ${fCode} to ${tCode}` }] }],
-        systemInstruction: { parts: [{ text: sys }] },
-        generationConfig: { responseMimeType: "application/json" }
-    })
-});
+                const res = await fetch(GEMINI_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Search ${fCode} to ${tCode}` }] }],
+                        systemInstruction: { parts: [{ text: sys }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
 
-const data = await res.json();
-
-if (data.error) {
-    console.error("Gemini Error:", data.error);
-    throw new Error(data.error.message);
-}
-
-const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-if (!text) throw new Error("Invalid AI response");
-
-const result = JSON.parse(cleanJSON(text));
                 const data = await res.json();
-                const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
-                currentFlightData = result.flights; activeClasses = {}; 
+
+                if (data.error) {
+                    console.error("Gemini Error:", data.error);
+                    throw new Error(data.error.message);
+                }
+
+                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("Invalid AI response");
+
+                const result = JSON.parse(cleanJSON(text));
+                
+                currentFlightData = result.flights; 
+                activeClasses = {}; 
                 document.getElementById('flight-loading').classList.add('hidden');
                 if (result.suggestion && result.suggestion.text) {
                     document.getElementById('smart-suggestion').classList.remove('hidden');
@@ -736,29 +730,27 @@ const result = JSON.parse(cleanJSON(text));
             grid.innerHTML = '';
             try {
                 const res = await fetch(GEMINI_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        contents: [{ parts: [{ text: `Explore ${inp}` }] }],
-        systemInstruction: { parts: [{ text: 'JSON: { "places": [{"name": "", "desc": ""}] }' }] },
-        generationConfig: { responseMimeType: "application/json" }
-    })
-});
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Explore ${inp}` }] }],
+                        systemInstruction: { parts: [{ text: 'JSON: { "places": [{"name": "", "desc": ""}] }' }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
 
-const data = await res.json();
-
-if (data.error) {
-    console.error("Gemini Error:", data.error);
-    throw new Error(data.error.message);
-}
-
-const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-if (!text) throw new Error("Invalid AI response");
-
-const result = JSON.parse(cleanJSON(text));
-                   
                 const data = await res.json();
-                const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
+
+                if (data.error) {
+                    console.error("Gemini Error:", data.error);
+                    throw new Error(data.error.message);
+                }
+
+                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("Invalid AI response");
+
+                const result = JSON.parse(cleanJSON(text));
+                    
                 document.getElementById('explorer-loading').classList.add('hidden');
                 result.places.forEach(p => {
                     const card = document.createElement('div');
