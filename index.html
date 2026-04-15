@@ -412,6 +412,7 @@
                         </div>
                         <div class="flex flex-col">
                             <label class="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest ml-1">Departure Date</label>
+                            <!-- UPDATED onchange to fix date logic -->
                             <input id="dep-date" type="date" onchange="updateMinReturnDate()" oninput="validateCheckFareButton()" class="px-6 py-5 rounded-2xl search-input outline-none text-sm">
                         </div>
                         <div id="return-date-container" class="flex flex-col opacity-20 pointer-events-none transition-all duration-300">
@@ -470,6 +471,13 @@
                             </button>
                         </div>
                     </div>
+
+                    <div class="space-y-8 text-left">
+                        <div class="glass-card p-8">
+                            <p class="text-sm leading-relaxed" style="color: var(--text-dim)">"The interface is incredibly smooth. Premium design!"</p>
+                            <h5 class="mt-4 font-bold text-white text-sm">- Ananya Sharma</h5>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -482,11 +490,9 @@
     </footer>
 
     <script>
-        // FIXED: Stable v1 Endpoint Model Name
-       
+       // const apiKey = ""; 
+const GEMINI_API = "/.netlify/functions/gemini";
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuRdsbSBWb7IFnsxEmT2AmpeJ9NcnA85M34MIqZ5MVm2EA1S44S9OMq01On65I_nBu/exec"; 
-        
-        const MODEL_NAME = "gemini-1.5-flash";
 
         let tripType = 'oneway';
         let currentFlightData = [];
@@ -506,22 +512,25 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dep-date').min = today;
             document.getElementById('ret-date').min = today;
+            
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.relative')) document.querySelectorAll('.suggestion-box').forEach(box => box.style.display = 'none');
             });
         };
 
+        // Utility to clean AI Response JSON
         function cleanJSON(str) {
-            try {
-                return str.replace(/```json/g, "").replace(/```/g, "").trim();
-            } catch(e) { return str; }
+            return str.replace(/```json/g, "").replace(/```/g, "").trim();
         }
 
+        // Fix: Update Min Return Date when Departure Changes
         function updateMinReturnDate() {
             const depDate = document.getElementById('dep-date').value;
             const retInput = document.getElementById('ret-date');
             retInput.min = depDate;
-            if (retInput.value && retInput.value < depDate) retInput.value = depDate;
+            if (retInput.value && retInput.value < depDate) {
+                retInput.value = depDate;
+            }
         }
 
         async function submitFeedback(event) {
@@ -529,19 +538,28 @@
             const btn = document.getElementById('feedback-submit-btn');
             const formState = document.getElementById('feedback-form-state');
             const successState = document.getElementById('feedback-success-state');
+            
             const formData = {
                 name: document.getElementById('feedback-name').value,
                 email: document.getElementById('feedback-email').value,
                 message: document.getElementById('feedback-msg').value,
                 timestamp: new Date().toLocaleString()
             };
+
             btn.innerText = "Sending...";
             btn.disabled = true;
+
             try {
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
                 formState.classList.add('hidden');
                 successState.classList.remove('hidden');
             } catch (error) {
+                console.error("Submission error:", error);
                 formState.classList.add('hidden');
                 successState.classList.remove('hidden');
             }
@@ -556,6 +574,7 @@
         }
 
         function toggleTheme() { document.body.classList.toggle('light-mode'); }
+        
         function showView(viewId) {
             const views = document.querySelectorAll('.page-view');
             const activeView = document.getElementById('view-' + viewId);
@@ -594,11 +613,12 @@
             const flight = currentFlightData[idx];
             const fromStr = document.getElementById('from-location').value;
             const toStr = document.getElementById('to-location').value;
-            const fCode = fromStr.match(/\((.*?)\)/)?.[1] || "DEL";
-            const tCode = toStr.match(/\((.*?)\)/)?.[1] || "BOM";
+            const fCode = fromStr.match(/\((.*?)\)/)?.[1] || fromStr.slice(-4, -1);
+            const tCode = toStr.match(/\((.*?)\)/)?.[1] || toStr.slice(-4, -1);
             const depDate = document.getElementById('dep-date').value;
             const retDate = document.getElementById('ret-date').value;
             const selClass = activeClasses[idx] || 'economy';
+            
             let url = `https://www.google.com/travel/flights?q=Flights%20from%20${fCode}%20to%20${tCode}%20on%20${depDate}`;
             if (tripType === 'return' && retDate) url += `%20through%20${retDate}`;
             url += `%20with%20${encodeURIComponent(flight.airline)}%20class%20${selClass}`;
@@ -651,13 +671,13 @@
             card.querySelectorAll('.class-pill').forEach(p => p.classList.toggle('active', p.dataset.class === cn));
         }
 
-        // FIXED: Robust API Calling Pattern
         async function searchFlights(overrideDep = null) {
-            if (!apiKey) return;
             const from = document.getElementById('from-location').value;
             const to = document.getElementById('to-location').value;
             const dep = overrideDep || document.getElementById('dep-date').value;
+            const ret = document.getElementById('ret-date').value;
             const fCode = from.match(/\((.*?)\)/)?.[1];
+            const tCode = to.match(/\((.*?)\)/)?.[1];
             const cur = document.getElementById('global-currency').value;
             if (overrideDep) document.getElementById('dep-date').value = overrideDep;
             document.getElementById('flight-results-container').classList.remove('hidden');
@@ -665,33 +685,31 @@
             document.getElementById('flight-loading').classList.remove('hidden');
             document.getElementById('smart-suggestion').classList.add('hidden');
             
-            const promptText = `Instructions: List 4 real airlines for ${tripType} flight from ${fCode} to ${to} on ${dep}. Provide prices for economy, premium_economy, business in ${cur}. Return a 'smart_suggestion' object if a cheap date found +/- 3 days. Output ONLY valid JSON: { "flights": [{ "airline": "", "baggage_checkin": "", "baggage_cabin": "", "policy": "", "classes": { "economy": { "price": "" }, "premium_economy": { "price": "", "diff": "+40%" }, "business": { "price": "", "diff": "+150%" } } }], "suggestion": { "text": "", "newDate": "" } }`;
-            
+            const sys = `List 4 real airlines for a ${tripType} flight from ${fCode} to ${tCode} on ${dep}. Provide prices for: economy, premium_economy, business in ${cur}. Return a 'smart_suggestion' if cheaper dates found +/- 3 days. JSON only: { "flights": [{ "airline": "", "baggage_checkin": "", "baggage_cabin": "", "policy": "", "classes": { "economy": { "price": "" }, "premium_economy": { "price": "", "diff": "+40%" }, "business": { "price": "", "diff": "+150%" } } }], "suggestion": { "text": "", "newDate": "" } }`;
             try {
-                // FIXED: Changed to stable v1 URL
-const url = "/.netlify/functions/gemini";            
-    const res = await fetch(url, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    contents: [{ parts: [{ text: promptText }] }]
-  })
+             const res = await fetch(GEMINI_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        contents: [{ parts: [{ text: `Search ${fCode} to ${tCode}` }] }],
+        systemInstruction: { parts: [{ text: sys }] },
+        generationConfig: { responseMimeType: "application/json" }
+    })
 });
-               const data = await res.json();
+
+const data = await res.json();
 
 if (data.error) {
-  console.error("API Error:", data.error);
-  throw new Error(data.error.message);
+    console.error("Gemini Error:", data.error);
+    throw new Error(data.error.message);
 }
 
 const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+if (!text) throw new Error("Invalid AI response");
 
-if (!text) {
-  throw new Error("Invalid API response");
-}
-                const result = JSON.parse(cleanJSON(text));
+const result = JSON.parse(cleanJSON(text));
+                const data = await res.json();
+                const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
                 currentFlightData = result.flights; activeClasses = {}; 
                 document.getElementById('flight-loading').classList.add('hidden');
                 if (result.suggestion && result.suggestion.text) {
@@ -706,28 +724,41 @@ if (!text) {
                     div.innerHTML = `<div class="flex flex-col gap-4"><div class="flex items-center gap-4"><div class="w-10 h-10 bg-sky-500/10 rounded-xl flex items-center justify-center text-sky-400"><i class="fa-solid fa-paper-plane"></i></div><h4 class="font-black text-lg text-white">${f.airline}</h4></div><div class="flex gap-2"><span class="class-pill active" data-class="economy" onclick="updateClass(${i}, 'economy')">Economy</span><span class="class-pill" data-class="premium_economy" onclick="updateClass(${i}, 'premium_economy')">Prem Eco <span class="text-sky-500">${f.classes.premium_economy.diff}</span></span><span class="class-pill" data-class="business" onclick="updateClass(${i}, 'business')">Business <span class="text-sky-500">${f.classes.business.diff}</span></span></div></div><div class="text-right"><p class="text-3xl font-black text-sky-400 mb-2 price-display">${f.classes.economy.price}</p><button onclick="openFlightModal(${i})" class="bg-white/5 hover:bg-white/10 text-slate-400 px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Details</button></div>`;
                     document.getElementById('flight-list').appendChild(div);
                 });
-            } catch (e) { document.getElementById('flight-loading').classList.add('hidden'); console.error(e); }
+            } catch (e) { document.getElementById('flight-loading').classList.add('hidden'); }
         }
 
         async function exploreDestination() {
-            if (!apiKey) return;
             const inp = document.getElementById('explorer-input').value.trim();
             if (!inp) return;
             const grid = document.getElementById('places-grid');
             document.getElementById('explorer-results').classList.remove('hidden');
             document.getElementById('explorer-loading').classList.remove('hidden');
             grid.innerHTML = '';
-            const promptText = `Instructions: Explore the best tourist attractions in ${inp}. Output ONLY valid JSON: { "places": [{"name": "", "desc": ""}] }`;
             try {
-                const url = `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-                });
+                const res = await fetch(GEMINI_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        contents: [{ parts: [{ text: `Explore ${inp}` }] }],
+        systemInstruction: { parts: [{ text: 'JSON: { "places": [{"name": "", "desc": ""}] }' }] },
+        generationConfig: { responseMimeType: "application/json" }
+    })
+});
+
+const data = await res.json();
+
+if (data.error) {
+    console.error("Gemini Error:", data.error);
+    throw new Error(data.error.message);
+}
+
+const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+if (!text) throw new Error("Invalid AI response");
+
+const result = JSON.parse(cleanJSON(text));
+                   
                 const data = await res.json();
-                const text = data.candidates[0].content.parts[0].text;
-                const result = JSON.parse(cleanJSON(text));
+                const result = JSON.parse(cleanJSON(data.candidates[0].content.parts[0].text));
                 document.getElementById('explorer-loading').classList.add('hidden');
                 result.places.forEach(p => {
                     const card = document.createElement('div');
