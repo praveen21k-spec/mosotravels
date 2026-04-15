@@ -483,7 +483,7 @@
 
     <script>
         // FIXED: Stable v1 Endpoint Model Name
-        const apiKey = "AIzaSyCeYXnAtcPsE7-zY9PkS1-4TjLOJbwUbf0"; // Replace if necessary
+       
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuRdsbSBWb7IFnsxEmT2AmpeJ9NcnA85M34MIqZ5MVm2EA1S44S9OMq01On65I_nBu/exec"; 
         
         const MODEL_NAME = "gemini-1.5-flash";
@@ -669,14 +669,28 @@
             
             try {
                 // FIXED: Changed to stable v1 URL
-                const url = `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-                });
-                const data = await res.json();
-                const text = data.candidates[0].content.parts[0].text;
+const url = "/.netlify/functions/gemini";            
+    const res = await fetch(url, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    contents: [{ parts: [{ text: promptText }] }]
+  })
+});
+               const data = await res.json();
+
+if (data.error) {
+  console.error("API Error:", data.error);
+  throw new Error(data.error.message);
+}
+
+const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+if (!text) {
+  throw new Error("Invalid API response");
+}
                 const result = JSON.parse(cleanJSON(text));
                 currentFlightData = result.flights; activeClasses = {}; 
                 document.getElementById('flight-loading').classList.add('hidden');
